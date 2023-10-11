@@ -1,3 +1,3 @@
 from decouple import config
 
-database_uri = config("DATABASE_URI", default="localhost")
+DATABASE_URI = config("database_uri", default="localhost")

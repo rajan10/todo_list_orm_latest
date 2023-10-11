@@ -28,3 +28,9 @@ class Task(Base):
 
     def __repr__(self) -> str:
         return f"<Task=>{self.id}:{self.name}>"
+
+
+if __name__ == "__main__":
+    from database import create_table
+
+    create_table()

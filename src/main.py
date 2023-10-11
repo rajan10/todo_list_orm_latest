@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
-from src.repository import UserRepository, TaskRepository
+from repository import UserRepository, TaskRepository
 from database import engine
 from views import authenticate
 
 
 class Prompt:
-    def home(self):
+    def home(self) -> int:
         print("\nWelcome to Todo List\n")
         option = input(
             "Enter the number to select. \n 1. Register \n 2. Login \n 3. Exit \n Enter the number:"
@@ -34,11 +34,14 @@ class Prompt:
 
         return int(option)
 
+    def updated_successfully(self) -> None:
+        print("Updated Succesfully!")
+
     def display_user(self, user):
         print(f"User Id: {user.id} \nUsername: {user.username}")
 
     def display_task(self, task):
-        if isinstance(task, list):
+        if isinstance(task, list):  # checking whether task is type list or not
             for member in task:
                 print(
                     f"Task Id: {member.id} \nTask name {member.name} \n Task status {member.status}"
@@ -53,6 +56,15 @@ class Prompt:
 
     def end(self):
         print("Thank you for using Todo Application.")
+
+    def update_task(self) -> int:
+        task_id = int(input("Enter the task id to update:"))
+        return task_id
+
+    def update_task_input(self):
+        task_name = input("Enter the task name to update:")
+        task_status = eval(input("Is it complete? (True/False)"))
+        return task_name, task_status
 
 
 class Todo:
@@ -99,14 +111,25 @@ class Todo:
                 tasks = task_repo.get_all()
                 self.prompt.display_task(task=tasks)
 
+            if option == 3:
+                tasks = task_repo.get_all()
+                self.prompt.display_task(task=tasks)
+                task_id = self.prompt.update_task()
+                task_name, task_status = self.prompt.update_task_input()
+                task_repo.update_task(id=task_id, name=task_name, status=task_status)
+                self.prompt.updated_successfully()
+
             if option == 5:
                 self.prompt.end()
                 break
 
 
 def main():
-    with Session(engine) as session:
-        todo = Todo(session=session)
+    with Session(
+        engine
+    ) as session:  #  session obj is created using the 'engine'.In SQLALchemy, a session is a way to
+        # interact with db
+        todo = Todo(session=session)  #
         user = todo.home_page()
         if user:
             todo.todo_interface(user=user)

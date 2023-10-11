@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.models import User, Task
+from models import User, Task
 
 
 class UserRepository:
@@ -52,21 +52,17 @@ class TaskRepository:
     def get_all(
         self,
     ) -> list[Task]:
-        stmt = select(Task)
+        stmt = select(Task).where(Task.user == self.user)
         return self.session.scalars(stmt).all()
 
     def get_by_id(
         self,
         id: int,
     ) -> Task:
-        stmt = select(Task).where(Task.id == id)
+        stmt = select(Task).where(Task.user == self.user).where(Task.id == id)
         return self.session.scalar(stmt)
 
-    def create_task(
-        self,
-        name: str,
-        status: bool = False,
-    ) -> Task:
+    def create_task(self, name: str, status: bool = False) -> Task:
         task = Task(
             name=name,
             status=status,
@@ -76,12 +72,7 @@ class TaskRepository:
         self.session.commit()
         return task
 
-    def update_task(
-        self,
-        id: int,
-        name: str,
-        status: bool,
-    ):
+    def update_task(self, id: int, name: str, status: bool):
         task = self.get_by_id(id=id)
         task.name = name
         task.status = status
