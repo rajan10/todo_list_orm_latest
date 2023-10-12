@@ -31,7 +31,6 @@ class Prompt:
                5. Exit
             """
         )
-
         return int(option)
 
     def updated_successfully(self) -> None:
@@ -65,6 +64,10 @@ class Prompt:
         task_name = input("Enter the task name to update:")
         task_status = eval(input("Is it complete? (True/False)"))
         return task_name, task_status
+
+    def delete_task(self):
+        task_id = input("Enter task id to delete:")
+        return task_id
 
 
 class Todo:
@@ -101,38 +104,51 @@ class Todo:
     def todo_interface(self, user):
         task_repo = TaskRepository(user=user, session=self.session)
         while True:
-            option = self.prompt.todo_interface()
-            if option == 1:
-                task_name = self.prompt.task_input()
-                task = task_repo.create_task(name=task_name)
-                self.prompt.display_task(task=task)
+            try:
+                option = self.prompt.todo_interface()
+                if option == 1:
+                    task_name = self.prompt.task_input()
+                    task = task_repo.create_task(name=task_name)
+                    self.prompt.display_task(task=task)
 
-            if option == 2:
-                tasks = task_repo.get_all()
-                self.prompt.display_task(task=tasks)
+                if option == 2:
+                    tasks = task_repo.get_all()
+                    self.prompt.display_task(task=tasks)
 
-            if option == 3:
-                tasks = task_repo.get_all()
-                self.prompt.display_task(task=tasks)
-                task_id = self.prompt.update_task()
-                task_name, task_status = self.prompt.update_task_input()
-                task_repo.update_task(id=task_id, name=task_name, status=task_status)
-                self.prompt.updated_successfully()
+                if option == 3:
+                    tasks = task_repo.get_all()
+                    self.prompt.display_task(task=tasks)
+                    task_id = self.prompt.update_task()
+                    task_name, task_status = self.prompt.update_task_input()
+                    task_repo.update_task(
+                        id=task_id, name=task_name, status=task_status
+                    )
+                    self.prompt.updated_successfully()
 
-            if option == 5:
-                self.prompt.end()
-                break
+                if option == 4:
+                    task_id = self.prompt.delete_task()
+
+                    task_repo.delete_task_by_id(id=task_id)
+
+                if option == 5:
+                    self.prompt.end()
+                    break
+            except Exception as exc:
+                print("An error occured", str(exc))
 
 
 def main():
-    with Session(
-        engine
-    ) as session:  #  session obj is created using the 'engine'.In SQLALchemy, a session is a way to
-        # interact with db
-        todo = Todo(session=session)  #
-        user = todo.home_page()
-        if user:
-            todo.todo_interface(user=user)
+    try:
+        with Session(
+            engine
+        ) as session:  #  session obj is created using the 'engine'.In SQLALchemy, a session is a way to
+            # interact with db
+            todo = Todo(session=session)  #
+            user = todo.home_page()
+            if user:
+                todo.todo_interface(user=user)
+    except Exception as exc:
+        print("An error occured:", str(exc))
 
 
 if __name__ == "__main__":

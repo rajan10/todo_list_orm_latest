@@ -55,10 +55,7 @@ class TaskRepository:
         stmt = select(Task).where(Task.user == self.user)
         return self.session.scalars(stmt).all()
 
-    def get_by_id(
-        self,
-        id: int,
-    ) -> Task:
+    def get_by_id(self, id: int) -> Task:
         stmt = select(Task).where(Task.user == self.user).where(Task.id == id)
         return self.session.scalar(stmt)
 
@@ -77,3 +74,9 @@ class TaskRepository:
         task.name = name
         task.status = status
         self.session.commit()
+
+    def delete_task_by_id(self, id: int) -> None:
+        task = self.get_by_id(id=id)
+        if task:
+            self.session.delete(task)
+            self.session.commit()
