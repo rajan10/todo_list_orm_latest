@@ -2,6 +2,11 @@ from sqlalchemy.orm import Session
 from repository import UserRepository, TaskRepository
 from database import engine
 from views import authenticate
+from sqlalchemy.exc import OperationalError
+from traceback import print_exc
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Prompt:
@@ -56,18 +61,14 @@ class Prompt:
     def end(self):
         print("Thank you for using Todo Application.")
 
-    def update_task(self) -> int:
-        task_id = int(input("Enter the task id to update:"))
+    def input_task_id(self) -> int:
+        task_id = int(input(" Input task id:"))
         return task_id
 
     def update_task_input(self):
         task_name = input("Enter the task name to update:")
         task_status = eval(input("Is it complete? (True/False)"))
         return task_name, task_status
-
-    def delete_task(self):
-        task_id = input("Enter task id to delete:")
-        return task_id
 
 
 class Todo:
@@ -118,7 +119,7 @@ class Todo:
                 if option == 3:
                     tasks = task_repo.get_all()
                     self.prompt.display_task(task=tasks)
-                    task_id = self.prompt.update_task()
+                    task_id = self.prompt.input_task_id()
                     task_name, task_status = self.prompt.update_task_input()
                     task_repo.update_task(
                         id=task_id, name=task_name, status=task_status
@@ -126,8 +127,7 @@ class Todo:
                     self.prompt.updated_successfully()
 
                 if option == 4:
-                    task_id = self.prompt.delete_task()
-
+                    task_id = self.prompt.input_task_id()
                     task_repo.delete_task_by_id(id=task_id)
 
                 if option == 5:
@@ -147,8 +147,15 @@ def main():
             user = todo.home_page()
             if user:
                 todo.todo_interface(user=user)
-    except Exception as exc:
-        print("An error occured:", str(exc))
+    except OperationalError as exc:
+        logger.exception(f"Databse error occured, {exc}")
+
+    except:
+        print("Error occured...")
+        print_exc()
+
+    finally:
+        print("\033[92m Code written by rajan\033[00m")
 
 
 if __name__ == "__main__":
