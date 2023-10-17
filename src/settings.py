@@ -16,7 +16,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "formatter": "file",
-            "filename": "./todo_application.log",
+            "filename": "todo.log",
         },
         "stream": {
             "level": "DEBUG",
@@ -25,9 +25,15 @@ LOGGING = {
         },
     },
     "loggers": {
-        "todo": {
+        "": {
             "handlers": ["file"],
             "level": "INFO",
+            "propogate": True,
+        },
+        "todo": {
+            "handlers": ["stream", "file"],
+            "level": "DEBUG",
+            "propogate": True,
         },
     },
 }

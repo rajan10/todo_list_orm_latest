@@ -5,17 +5,20 @@ from views import authenticate
 from sqlalchemy.exc import OperationalError
 from traceback import print_exc
 import logging
+from utils import requires_numeric_option
+from custom_exception import NoUserInDatabase
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class Prompt:
+    @requires_numeric_option
     def home(self) -> int:
         print("\nWelcome to Todo List\n")
         option = input(
             "Enter the number to select. \n 1. Register \n 2. Login \n 3. Exit \n Enter the number:"
         )
-        return int(option)
+        return option
 
     def creds(self):
         username = input("Enter username: ")
@@ -36,7 +39,7 @@ class Prompt:
                5. Exit
             """
         )
-        return int(option)
+        return option
 
     def updated_successfully(self) -> None:
         print("Updated Succesfully!")
@@ -70,6 +73,9 @@ class Prompt:
         task_status = eval(input("Is it complete? (True/False)"))
         return task_name, task_status
 
+    def invalid_input(self):
+        print("Invalid input. \n Please enter the number from option menu.")
+
 
 class Todo:
     def __init__(self, session: Session) -> None:
@@ -80,27 +86,34 @@ class Todo:
 
     def home_page(self):
         while True:
-            option = self.prompt.home()
-            if option == 1:
-                username, password = self.prompt.creds()
-                user = self.user_repo.create_user(
-                    username=username,
-                    password=password,
-                )
-                return user
-            if option == 2:
-                username, password = self.prompt.creds()
-                flag, user = authenticate(
-                    username=username,
-                    password=password,
-                )
-                if not flag:
-                    self.prompt.login_failed()
+            try:
+                option = self.prompt.home()
+                if option == 1:
+                    username, password = self.prompt.creds()
+                    user = self.user_repo.create_user(
+                        username=username, password=password
+                    )
+                    return user
+                if option == 2:
+                    username, password = self.prompt.creds()
+                    flag, user = authenticate(
+                        username=username,
+                        password=password,
+                    )
+                    if not flag:
+                        self.prompt.login_failed()
+                        self.prompt.end()
+                        continue
+                    return user
+                if option == 3:
                     self.prompt.end()
-                    continue
-                return user
-            if option == 3:
-                self.prompt.end()
+                else:
+                    self.prompt.invalid_input()
+                    logger.info("invalid input, input value: %s", str(option))
+
+            except ValueError as exc:
+                self.prompt.invalid_input()
+                logger.info("Invalid input, Input Value: %s", str(exc))
 
     def todo_interface(self, user):
         task_repo = TaskRepository(user=user, session=self.session)
@@ -144,13 +157,18 @@ def main():
         ) as session:  #  session obj is created using the 'engine'.In SQLALchemy, a session is a way to
             # interact with db
             todo = Todo(session=session)  #
-            user = todo.home_page()
-            if user:
+            try:
+                user = todo.home_page()
+
+            except NoUserInDatabase as exc:
+                print(exc)
+                logger.exception(exc)
+            else:
                 todo.todo_interface(user=user)
     except OperationalError as exc:
         logger.exception(f"Databse error occured, {exc}")
 
-    except:
+    except Exception:
         print("Error occured...")
         print_exc()
 

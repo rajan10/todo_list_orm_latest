@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from models import User, Task
+from custom_exception import NoUserInDatabase
 
 
 class UserRepository:
@@ -28,7 +29,9 @@ class UserRepository:
         username: str,
     ) -> User:
         stmt = select(User).where(User.username == username)
-        return self.session.scalar(stmt)
+        user = self.session.scalar(stmt)
+        if not user:
+            raise NoUserInDatabase("No such username in the database")
 
     def create_user(
         self,
