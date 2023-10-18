@@ -2,11 +2,18 @@ from sqlalchemy.orm import Session
 
 from repository import UserRepository
 from database import engine
+from custom_exception import NoUserInDatabase, AuthenticationFailed
+import logging
+
+logger = logging.getLogger()
 
 
 def authenticate(username, password):
     with Session(engine) as session:
         user_repo = UserRepository(session=session)
-        user = user_repo.get_by_username(username=username)
+        try:
+            user = user_repo.get_by_username(username=username)
+        except NoUserInDatabase as exc:
+            raise AuthenticationFailed("Authentication Failed ") from exc
 
     return bool(user.password == password), user

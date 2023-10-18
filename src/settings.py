@@ -26,7 +26,7 @@ LOGGING = {
     },
     "loggers": {
         "": {
-            "handlers": ["file"],
+            "handlers": ["file", "stream"],
             "level": "INFO",
             "propogate": True,
         },

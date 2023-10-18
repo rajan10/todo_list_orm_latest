@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 from traceback import print_exc
 import logging
 from utils import requires_numeric_option
-from custom_exception import NoUserInDatabase
+from custom_exception import AuthenticationFailed, HomePageException
 
 logger = logging.getLogger()
 
@@ -96,10 +96,7 @@ class Todo:
                     return user
                 if option == 2:
                     username, password = self.prompt.creds()
-                    flag, user = authenticate(
-                        username=username,
-                        password=password,
-                    )
+                    flag, user = authenticate(username=username, password=password)
                     if not flag:
                         self.prompt.login_failed()
                         self.prompt.end()
@@ -114,6 +111,9 @@ class Todo:
             except ValueError as exc:
                 self.prompt.invalid_input()
                 logger.info("Invalid input, Input Value: %s", str(exc))
+
+            except AuthenticationFailed as exc:
+                raise HomePageException("Error in Home Page") from exc
 
     def todo_interface(self, user):
         task_repo = TaskRepository(user=user, session=self.session)
@@ -156,18 +156,14 @@ def main():
             engine
         ) as session:  #  session obj is created using the 'engine'.In SQLALchemy, a session is a way to
             # interact with db
-            todo = Todo(session=session)  #
-            try:
-                user = todo.home_page()
-
-            except NoUserInDatabase as exc:
-                print(exc)
-                logger.exception(exc)
-            else:
-                todo.todo_interface(user=user)
+            todo = Todo(session=session)
+            user = todo.home_page()
+            todo.todo_interface(user=user)
     except OperationalError as exc:
         logger.exception(f"Databse error occured, {exc}")
 
+    except HomePageException as exc:
+        logger.exception(f"Home page error: {exc}")
     except Exception:
         print("Error occured...")
         print_exc()

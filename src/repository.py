@@ -32,6 +32,7 @@ class UserRepository:
         user = self.session.scalar(stmt)
         if not user:
             raise NoUserInDatabase("No such username in the database")
+        return user
 
     def create_user(
         self,
