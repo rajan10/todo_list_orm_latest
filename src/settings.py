@@ -26,13 +26,8 @@ LOGGING = {
     },
     "loggers": {
         "": {
-            "handlers": ["file", "stream"],
+            "handlers": ["file"],
             "level": "INFO",
-            "propogate": True,
-        },
-        "todo": {
-            "handlers": ["stream", "file"],
-            "level": "DEBUG",
             "propogate": True,
         },
     },

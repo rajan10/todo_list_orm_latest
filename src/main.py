@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 from traceback import print_exc
 import logging
 from utils import requires_numeric_option
-from custom_exception import AuthenticationFailed, HomePageException
+from custom_exception import AuthenticationFailed, HomePageException, NoObjectInDatabase
 
 logger = logging.getLogger()
 
@@ -29,6 +29,7 @@ class Prompt:
         name = input("Enter task name: ")
         return name
 
+    @requires_numeric_option
     def todo_interface(self):
         option = input(
             """Enter the number to select.\n
@@ -39,6 +40,7 @@ class Prompt:
                5. Exit
             """
         )
+
         return option
 
     def updated_successfully(self) -> None:
@@ -140,12 +142,17 @@ class Todo:
                     self.prompt.updated_successfully()
 
                 if option == 4:
+                    tasks = task_repo.get_all()
+                    self.prompt.display_task(task=tasks)
                     task_id = self.prompt.input_task_id()
                     task_repo.delete_task_by_id(id=task_id)
 
                 if option == 5:
                     self.prompt.end()
                     break
+            except NoObjectInDatabase as exc:
+                print(str(exc))
+                logger.error(str(exc))
             except Exception as exc:
                 print("An error occured", str(exc))
 

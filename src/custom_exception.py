@@ -1,5 +1,5 @@
 # Throw Early, Catch Late
-class NoUserInDatabase(Exception):
+class NoObjectInDatabase(Exception):
     def __init__(self, message):
         super().__init__(message)
 

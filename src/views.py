@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from repository import UserRepository
 from database import engine
-from custom_exception import NoUserInDatabase, AuthenticationFailed
+from custom_exception import NoObjectInDatabase, AuthenticationFailed
 import logging
 
 logger = logging.getLogger()
@@ -13,7 +13,7 @@ def authenticate(username, password):
         user_repo = UserRepository(session=session)
         try:
             user = user_repo.get_by_username(username=username)
-        except NoUserInDatabase as exc:
+        except NoObjectInDatabase as exc:
             raise AuthenticationFailed("Authentication Failed ") from exc
 
     return bool(user.password == password), user

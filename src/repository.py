@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from models import User, Task
-from custom_exception import NoUserInDatabase
+from custom_exception import NoObjectInDatabase
 
 
 class UserRepository:
@@ -31,7 +31,7 @@ class UserRepository:
         stmt = select(User).where(User.username == username)
         user = self.session.scalar(stmt)
         if not user:
-            raise NoUserInDatabase("No such username in the database")
+            raise NoObjectInDatabase("No such Object in the database")
         return user
 
     def create_user(
@@ -57,18 +57,18 @@ class TaskRepository:
         self,
     ) -> list[Task]:
         stmt = select(Task).where(Task.user == self.user)
-        return self.session.scalars(stmt).all()
+        tasks = self.session.scalars(stmt).all()
+        if not tasks:
+            raise NoObjectInDatabase(f"{self.user.username} has No task!")
 
     def get_by_id(self, id: int) -> Task:
         stmt = select(Task).where(Task.user == self.user).where(Task.id == id)
-        return self.session.scalar(stmt)
+        task = self.session.scalar(stmt)
+        if not task:
+            raise NoObjectInDatabase(f"No task found for this ID {id}")
 
     def create_task(self, name: str, status: bool = False) -> Task:
-        task = Task(
-            name=name,
-            status=status,
-            user_id=self.user.id,
-        )
+        task = Task(name=name, status=status, user_id=self.user.id)
         self.session.add(task)
         self.session.commit()
         return task
